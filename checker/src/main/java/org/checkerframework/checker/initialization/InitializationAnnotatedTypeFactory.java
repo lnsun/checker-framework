@@ -650,7 +650,6 @@ public abstract class InitializationAnnotatedTypeFactory<
                 // Replace all annotations with the top annotation for that hierarchy.
                 type.clearAnnotations();
                 type.addAnnotations(qualHierarchy.getTopAnnotations());
-                //                type.replaceAnnotation(qualHierarchy.getTopAnnotation(COMMITTED));
             }
 
             if (!AnnotationUtils.containsSame(declaredFieldAnnotations, NOT_ONLY_INITIALIZED)) {
