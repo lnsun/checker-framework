@@ -204,11 +204,12 @@ public abstract class AbstractQualifierPolymorphism implements QualifierPolymorp
                                 && // isSubtype cannot handle this
                                 atypeFactory.types.isSubtype(javaLhstype, javaReturntype);
 
-                // only perform receiver-sensitive poly resolution when return type is erased
-                // subtype of lhs
-                if (polyIsSub || polyIsSuper) { // lhs and return type are comparable
+                // only perform receiver-sensitive poly resolution when return type is comparable to
+                // lhs
+                // otherwise asSuper visitor will crash when not comparable
+                if (polyIsSub || polyIsSuper) {
                     instantiationMapping =
-                            collector.reduceWithUpperBounds(
+                            collector.reduce(
                                     instantiationMapping,
                                     collector.visit(
                                             // Actual assignment lhs type
@@ -413,53 +414,6 @@ public abstract class AbstractQualifierPolymorphism implements QualifierPolymorp
                     res.put(polyQual, combine(polyQual, a1Annos, a2Annos));
                 }
                 r2remain.remove(polyQual);
-            }
-            for (AnnotationMirror key2 : r2remain) {
-                res.put(key2, r2.get(key2));
-            }
-            return res;
-        }
-
-        /**
-         * Reduces lower bounds r1 with upper bounds r2.
-         *
-         * @param r1 a map from {@link AnnotationMirror} to {@link AnnotationMirror}
-         * @param r2 a map from {@link AnnotationMirror} to {@link AnnotationMirror}
-         * @return the reduced {@link AnnotationMirrorMap}
-         */
-        private AnnotationMirrorMap<AnnotationMirror> reduceWithUpperBounds(
-                AnnotationMirrorMap<AnnotationMirror> r1,
-                AnnotationMirrorMap<AnnotationMirror> r2) {
-
-            if (r1 == null || r1.isEmpty()) {
-                return r2;
-            }
-            if (r2 == null || r2.isEmpty()) {
-                return r1;
-            }
-
-            AnnotationMirrorMap<AnnotationMirror> res = new AnnotationMirrorMap<>();
-            // Ensure that all qualifiers from r1 and r2 are visited.
-            AnnotationMirrorSet r2remain = new AnnotationMirrorSet();
-            r2remain.addAll(r2.keySet());
-            for (Map.Entry<AnnotationMirror, AnnotationMirror> kv1 : r1.entrySet()) {
-                AnnotationMirror key1 = kv1.getKey();
-                AnnotationMirror a1Anno = kv1.getValue();
-                AnnotationMirror a2Anno = r2.get(key1);
-                if (a2Anno != null) {
-                    r2remain.remove(key1);
-                    AnnotationMirror subres = null;
-                    for (AnnotationMirror top : topQuals) {
-                        if (qualHierarchy.isSubtype(a1Anno, top)) {
-                            subres = a1Anno;
-                        } else if (qualHierarchy.isSubtype(a2Anno, top)) {
-                            subres = a2Anno;
-                        }
-                    }
-                    res.put(key1, subres);
-                } else {
-                    res.put(key1, a1Anno);
-                }
             }
             for (AnnotationMirror key2 : r2remain) {
                 res.put(key2, r2.get(key2));
